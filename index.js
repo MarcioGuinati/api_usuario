@@ -1,54 +1,48 @@
-const express = require('express');
-const cors = require('cors');
-
-const app = express();
-app.use(cors());
-app.use(express.json()); // Permite ler o corpo da requisição em JSON
-
 let users = []; // Simulação de banco de dados com um array
 
-// Rota para listar todos os usuários
-app.get('/api/users', (req, res) => {
-  res.json(users);
-});
+module.exports = (req, res) => {
+  const { method } = req;
 
-// Rota para criar um novo usuário
-app.post('/api/users', (req, res) => {
-  const { name, email } = req.body;
-  const newUser = { id: users.length + 1, name, email };
-  users.push(newUser);
-  res.status(201).json(newUser);
-});
-
-// Rota para editar um usuário
-app.put('/api/users/:id', (req, res) => {
-  const userId = parseInt(req.params.id);
-  const { name, email } = req.body;
-  const userIndex = users.findIndex(user => user.id === userId);
-
-  if (userIndex === -1) {
-    return res.status(404).json({ message: 'Usuário não encontrado' });
+  if (method === 'GET') {
+    // Rota para listar todos os usuários
+    return res.status(200).json(users);
   }
 
-  users[userIndex] = { id: userId, name, email };
-  res.json(users[userIndex]);
-});
-
-// Rota para excluir um usuário
-app.delete('/api/users/:id', (req, res) => {
-  const userId = parseInt(req.params.id);
-  const userIndex = users.findIndex(user => user.id === userId);
-
-  if (userIndex === -1) {
-    return res.status(404).json({ message: 'Usuário não encontrado' });
+  if (method === 'POST') {
+    // Rota para criar um novo usuário
+    const { name, email } = req.body;
+    const newUser = { id: users.length + 1, name, email };
+    users.push(newUser);
+    return res.status(201).json(newUser);
   }
 
-  users.splice(userIndex, 1);
-  res.status(204).send(); // 204 sem conteúdo
-});
+  if (method === 'PUT') {
+    // Rota para editar um usuário
+    const userId = parseInt(req.query.id);
+    const { name, email } = req.body;
+    const userIndex = users.findIndex(user => user.id === userId);
 
-// Definindo a porta para o servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+    if (userIndex === -1) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    users[userIndex] = { id: userId, name, email };
+    return res.status(200).json(users[userIndex]);
+  }
+
+  if (method === 'DELETE') {
+    // Rota para excluir um usuário
+    const userId = parseInt(req.query.id);
+    const userIndex = users.findIndex(user => user.id === userId);
+
+    if (userIndex === -1) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    users.splice(userIndex, 1);
+    return res.status(204).send(); // 204 sem conteúdo
+  }
+
+  // Método não permitido
+  return res.status(405).json({ message: 'Método não permitido' });
+};
